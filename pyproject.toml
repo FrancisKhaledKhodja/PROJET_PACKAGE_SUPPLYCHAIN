@@ -1,0 +1,23 @@
+[project]
+name = "projet-package-supplychain"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastexcel>=0.14.0",
+    "loguru>=0.7.3",
+    "marimo>=0.13.11",
+    "numpy>=2.3.1",
+    "pillow>=11.2.1",
+    "pip>=25.1.1",
+    "plotly>=6.1.2",
+    "polars-lts-cpu>=1.31.0",
+    "pytest>=8.4.0",
+    "python-dotenv>=1.1.0",
+    "requests>=2.32.3",
+    "sqlmodel>=0.0.24",
+    "unidecode>=1.4.0",
+    "xlsxwriter>=3.2.3",
+]
