@@ -11,6 +11,7 @@ def get_items_without_exit():
     label_mvt_exit = ["SORTIE INTERVENTION", "SORTIE PRODUCTION", "SORTIE CONSOMMATION"]
     date_today = dt.datetime.today().date()
     last_folder = sorted(os.listdir(folder_path_output), reverse=True)[0]
+    items = pl.read_parquet(os.path.join(folder_path_output, last_folder, "items.parquet"))
     mvt = pl.read_parquet(os.path.join(folder_path_output, last_folder, "mvt_oracle_and_speed_final.parquet"))
     last_mvt_exit_items = mvt.filter(pl.col("lib_motif_mvt").is_in(label_mvt_exit)).sort(pl.col("code_article", "date_mvt", "n_mvt")).unique(subset="code_article", keep="last").select(pl.col("date_mvt", "code_article"))
     last_mvt_exit_items = last_mvt_exit_items.with_columns(((date_today - pl.col("date_mvt")).dt.total_days()).alias("nbre_jours_sans_sortie"))
@@ -53,7 +54,28 @@ def get_items_without_exit():
         )
     )
 
-    last_mvt_exit_items = last_mvt_exit_items.with_columns(expression.alias("categorie_sans_sortie"))    
+    last_mvt_exit_items = last_mvt_exit_items.with_columns(expression.alias("categorie_sans_sortie"))
+
+    items_list = items.select(pl.col("code_article")).to_series().to_list()
+
+    items_list_from_mvt = last_mvt_exit_items.select(pl.col("code_article")).to_series().to_list()
+
+    items_to_add = set(items_list).difference(items_list_from_mvt)
+    quantity_days_without_exit = date_today - dt.datetime(2006, 1, 1).date()
+    
+    df = pl.DataFrame({"date_mvt": None, 
+                       "code_article": list(items_to_add)})
+    
+    
+    df = df.join(items.select(pl.col("code_article", "date_creation_article")), how="left", on="code_article")
+    df = df.with_columns((date_today - pl.col("date_creation_article")).dt.total_days().alias("nbre_jours_sans_sortie"))
+
+    df = df.with_columns(expression.alias("categorie_sans_sortie"))
+
+    df = df.with_columns(pl.col("nbre_jours_sans_sortie").cast(pl.Int64).alias("nbre_jours_sans_sortie"))
+    df = df.drop(pl.col("date_creation_article"))
+
+    last_mvt_exit_items = pl.concat([last_mvt_exit_items, df])
 
     logger.info("Fin de l'appel de l'api get_items_without_exit")
     return last_mvt_exit_items

@@ -22,6 +22,10 @@ class MovementSpeed():
         self._sort_dataframe()
         self._put_in_the_order_the_columns()
         self._correct_error_mvt_label()
+        self._change_type_columns()
+    
+    def _change_type_columns(self):
+        self.df = self.df.with_columns(pl.col("flag_panne_sur_stock").cast(pl.Int8))
 
     def _create_bt_columns(self):
         self.df = self.df.with_columns(pl.coalesce(["n_bt_mvt", "n_bt_stock"]).alias("n_bt"))

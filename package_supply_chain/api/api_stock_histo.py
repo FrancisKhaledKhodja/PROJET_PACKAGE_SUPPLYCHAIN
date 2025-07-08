@@ -152,6 +152,14 @@ def get_stock_histo():
 
     stock_histo = stock_histo.drop("bu_right")
 
+    stock_histo = stock_histo.with_columns(pl.col("n_lot").str.strip_chars().alias("n_lot"))
+    stock_histo = stock_histo.with_columns(pl.col("n_serie").str.strip_chars().alias("n_serie"))
+
+    stock_histo = stock_histo.with_columns(pl.col("n_lot").str.to_uppercase().alias("n_lot"))
+    stock_histo = stock_histo.with_columns(pl.col("n_serie").str.to_uppercase().alias("n_serie"))
+
+    stock_histo = stock_histo.with_columns(pl.concat_str(pl.col("code_article", "n_lot", "n_serie"), separator="-").alias("cle_article"))
+
 
     return stock_histo
 

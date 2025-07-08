@@ -32,6 +32,12 @@ def get_state_stocks():
                      "commentaires_operateurs_tdf"]
     stock = stock.select(stock_columns)
 
+    stock = stock.with_columns(pl.col("n_lot").str.strip_chars().alias("n_lot"))
+    stock = stock.with_columns(pl.col("n_serie").str.strip_chars().alias("n_serie"))
+
+    stock = stock.with_columns(pl.col("n_lot").str.to_uppercase().alias("n_lot"))
+    stock = stock.with_columns(pl.col("n_serie").str.to_uppercase().alias("n_serie"))
+
     # Add store code speed ont stock oracle
     stock_oracle = stock_oracle.join(correspondence_store_codes.select(pl.col("code_magasin_oracle", "tiers_speed")), 
                                      how="left", 
@@ -227,39 +233,41 @@ def get_state_stocks():
     logistic_personnel = ["homeyer_j", "postel", "minassian", "grimault patrick"]
     dpi_demandeur = dpi.select(pl.col("numero_demande", "demandeur", "responsable_projet", "n_de_demande_de_liv_trans", "user_creation_de_demande_de_liv_trans")).unique()
 
-    dpi_demandeur = (
-        dpi_demandeur.with_columns(
-            pl.when(pl.col("n_de_demande_de_liv_trans").is_null())
+
+    expression = (
+        pl.when(pl.col("n_de_demande_de_liv_trans").is_null())
+        .then(
+            pl.when(pl.col("demandeur").str.to_lowercase().is_in(logistic_personnel))
+            .then(pl.col("responsable_projet"))
+            .otherwise(pl.col("demandeur"))
+        )
+        .otherwise(
+            pl.when(pl.col("user_creation_de_demande_de_liv_trans").str.to_lowercase().is_in(logistic_personnel))
             .then(
                 pl.when(pl.col("demandeur").str.to_lowercase().is_in(logistic_personnel))
-                .then(pl.col("responsable_projet"))
-                .otherwise(pl.col("demandeur"))
+                    .then(pl.col("responsable_projet"))
+                    .otherwise(pl.col("demandeur"))
             )
-            .otherwise(
-                pl.when(pl.col("user_creation_de_demande_de_liv_trans").str.to_lowercase().is_in(logistic_personnel))
-                .then(
-                    pl.when(pl.col("demandeur").str.to_lowercase().is_in(logistic_personnel))
-                        .then(pl.col("responsable_projet"))
-                        .otherwise(pl.col("demandeur"))
-                )
-                .otherwise(pl.col("user_creation_de_demande_de_liv_trans"))
-            )
-            .alias("demandeur_dpi")
+            .otherwise(pl.col("user_creation_de_demande_de_liv_trans"))
         )
     )
 
+    dpi_demandeur = dpi_demandeur.with_columns(expression.alias("demandeur_dpi"))
+    dpi_demandeur = dpi_demandeur.join(correspondance_user_dpi.select("nom", "user_dpi"), how="left", left_on="demandeur_dpi", right_on="user_dpi")
+
+    dpi_demandeur = dpi_demandeur.drop("demandeur_dpi")
+    dpi_demandeur = dpi_demandeur.rename({"nom": "demandeur_dpi"})
     dpi_demandeur_liv = dpi_demandeur.filter(pl.col("n_de_demande_de_liv_trans").is_not_null()).select(pl.col("n_de_demande_de_liv_trans", "demandeur_dpi")).unique()
     dpi_demandeur_liv = dpi_demandeur_liv.rename({"n_de_demande_de_liv_trans": "numero_demande"})
+
     dpi_demandeur = dpi_demandeur.filter(pl.col("n_de_demande_de_liv_trans").is_null()).filter(~pl.col("numero_demande").str.starts_with("S")).select(pl.col("numero_demande", "demandeur_dpi")).unique()
     dpi_demandeur_final = pl.concat([dpi_demandeur, dpi_demandeur_liv])
+    dpi_demandeur_final = dpi_demandeur_final.unique()
 
     stock = stock.join(dpi_demandeur_final, how="left", left_on="n_cde_dpm_dpi", right_on="numero_demande")
-
-    # replace user_dpi by name and surname
-    stock = stock.join(correspondance_user_dpi.select(pl.col("user_dpi", "nom")), how="left", left_on="demandeur_dpi", right_on="user_dpi")
-
+    
     # add last known movement for each store
-    expression = 1
+    
     last_mvt_per_store =  mvt.sort("magasin", "date_mvt", "n_mvt").select(pl.col("magasin", "date_mvt")).unique(subset="magasin", keep="last")
     last_mvt_per_store = last_mvt_per_store.rename({"date_mvt": "dernier_mvt_connu_du_magasin"})
 
@@ -268,16 +276,54 @@ def get_state_stocks():
     # add days without exit
     stock = stock.join(items_without_exit.select(pl.col("code_article", "nbre_jours_sans_sortie", "categorie_sans_sortie")), how="left", on="code_article")
 
+    expression = (
+        pl.when((pl.col("libelle_pe").is_null()) & (pl.col("flag_stock_d_m") == "D"))
+        .then(pl.col("libelle_projet_industrie"))
+        .otherwise(pl.col("libelle_pe"))
+        .alias("libelle_pe")
+    )
+
+    stock = stock.with_columns(expression)
+
+    expression = (
+        pl.when((pl.col("statut_pe").is_null()) & (pl.col("flag_stock_d_m") == "D"))
+        .then(pl.col("statut_projet_industrie"))
+        .otherwise(pl.col("statut_pe"))
+        .alias("statut_pe")
+    )
+    stock = stock.with_columns(expression)
+
+    expression = (
+        pl.when((pl.col("responsable_pe_nom_prenom").is_null()) & (pl.col("flag_stock_d_m") == "D"))
+        .then(pl.col("chef_projet_projet_industrie_nom_prenom"))
+        .otherwise(pl.col("responsable_pe_nom_prenom"))
+        .alias("responsable_pe_nom_prenom")
+    )
+    stock = stock.with_columns(expression)
+
+
+    stock = stock.rename({"libelle_pe": "libelle_projet", 
+                          "projet_industrie_information": "code_pj", 
+                          "libelle_projet_industrie": "libelle_pj", 
+                          "code_programme_budgetaire_base_pe": "code_pg",
+                          "libelle_programme_pe": "libelle_pg", 
+                          "statut_projet_industrie": "statut_pj", 
+                          "statut_pe": "statut_projet",
+                          "responsable_pe_nom_prenom": "responsable_projet",
+                          "chef_projet_projet_industrie_nom_prenom": "responsable_pj"})
+
     # Put the columns in the order
     columns_order = ["date_stock", "code_magasin", "libelle_magasin", "statut", "type_de_depot", "amont_aval", "flag_stock_d_m", "emplacement", "transit",
                      "code_article", "libelle_court_article", "type_article", "statut_abrege_article", "criticite_pim", "feuille_du_catalogue", 
                      "stocksecu_inv_oui_non", "pump", "lieu_de_reparation_pim", "commentaire_logistique", "est_oc_ou_ol", "qte_min", "qte_max", 
-                     "n_lot", "n_serie", "n_version", "qualite", "qte_stock", "valo_stock", "date_reception", "n_cde_dpm_dpi", "demandeur_dpi", "nom","n_ums", 
-                     "n_bt", "ig_installation", "libelle_long_ig", "commentaires_operateurs_tdf", "code_projet", "libelle_pe", "statut_pe", "responsable_pe_nom_prenom", "projet_industrie_information",
-                     "libelle_projet_industrie", "statut_projet_industrie", "chef_projet_projet_industrie_nom_prenom", "code_programme_budgetaire_base_pe", 
-                     "libelle_programme_pe", "date_reception_corrigee", "dernier_mvt_connu_du_magasin", "delai_anciennete_jours", "categorie_anciennete", 
-                     "nbre_jours_sans_sortie", "categorie_sans_sortie", "bu"]
+                     "n_lot", "n_serie", "n_version", "qualite", "qte_stock", "valo_stock", "date_reception", "n_cde_dpm_dpi", "demandeur_dpi", "n_ums", 
+                     "n_bt", "ig_installation", "libelle_long_ig", "commentaires_operateurs_tdf", "code_projet", "libelle_projet", "statut_projet", 
+                     "responsable_projet", "code_pj", "libelle_pj", "statut_pj", "responsable_pj", "code_pg", "libelle_pg", "date_reception_corrigee", 
+                     "dernier_mvt_connu_du_magasin", "delai_anciennete_jours", "categorie_anciennete", "nbre_jours_sans_sortie", 
+                     "categorie_sans_sortie", "bu"]
     stock = stock.select(columns_order)
+
+    stock = stock.with_columns(pl.concat_str(pl.col("code_article", "n_lot", "n_serie"), separator="-").alias("cle_article"))
 
     logger.info("Fin de l'appel de l'api get_state_stock")
 

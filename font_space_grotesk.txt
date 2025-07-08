@@ -1,0 +1,14 @@
+{
+  "name": "Space Grotesk Theme",
+  "textClasses": {
+    "label": {
+      "fontFace": "Space Grotesk"
+    },
+    "title": {
+      "fontFace": "Space Grotesk"
+    },
+    "header": {
+      "fontFace": "Space Grotesk"
+    }
+  }
+}

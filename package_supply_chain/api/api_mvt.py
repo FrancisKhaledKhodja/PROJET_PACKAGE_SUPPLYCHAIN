@@ -125,6 +125,36 @@ def get_movements_oracle_and_speed():
     mvt = mvt.with_columns(expression.alias("bu"))
     mvt = mvt.drop("bu_right")
 
+    expression = (
+        pl.when(pl.col("lib_motif_mvt") == "ENTREE RETOUR INTERVENTION")
+        .then(pl.col("qte_mvt"))
+        .otherwise(0)
+    )
+
+    mvt = mvt.with_columns(expression.alias("qte_mvt_entree_intervention"))
+
+    expression = (
+        pl.when(pl.col("lib_motif_mvt") == "SORTIE INTERVENTION")
+        .then(pl.col("qte_mvt"))
+        .otherwise(0)
+    )
+
+    mvt = mvt.with_columns(expression.alias("qte_mvt_sortie_intervention"))
+
+    expression = (
+        pl.when(pl.col("n_rma").str.to_lowercase().str.contains("ponderation"))
+        .then(0)
+        .otherwise(pl.col("flag_panne_sur_stock"))
+    )
+
+    mvt = mvt.with_columns(expression.alias("flag_panne_sur_stock_corrige"))
+
+    mvt = mvt.with_columns(pl.col("n_lot").str.strip_chars().alias("n_lot"))
+    mvt = mvt.with_columns(pl.col("n_serie").str.strip_chars().alias("n_serie"))
+
+    mvt = mvt.with_columns(pl.col("n_lot").str.to_uppercase().alias("n_lot"))
+    mvt = mvt.with_columns(pl.col("n_serie").str.to_uppercase().alias("n_serie"))
+    
     logger.info("Fin de l'appel de l'api get_movements_oracle_and_speed")
 
     return mvt

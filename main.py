@@ -26,6 +26,9 @@ from package_supply_chain.api.api_inter_prod_conso_output_stat import get_inter_
 from package_supply_chain.api.api_items_without_exit import get_items_without_exit
 from package_supply_chain.api.api_priority_list_photo import get_priority_list_photo, get_list_items_photo
 from package_supply_chain.api.api_analyze_m_to_d import get_items_m_to_d
+from package_supply_chain.api.api_items_to_check_after_return_from_prod import get_items_to_check_after_return_from_prod
+from package_supply_chain.api.api_items_with_return_good import get_items_with_return_good
+from package_supply_chain.api.api_origin_items import get_origin_items
 
 
 
@@ -179,6 +182,97 @@ def making_parquet_file(last_path_folder, now_output):
     mvt_oracle_compil.write_parquet(os.path.join(now_output, "mvt_oracle.parquet"))
 
 
+def get_stores_references_and_edition(now_output):
+    stores_references = get_stores_reference()
+    stores_references.write_parquet(os.path.join(now_output, "stores_final.parquet"))
+    stores_references.write_parquet(os.path.join(folder_path_exit_parquet, "stores_final.parquet"))
+    stores_references.write_excel(os.path.join(".", "excel_files_output", "stores.xlsx"))
+
+def get_mvt_oracle_speed_and_editions(now_output):
+    mvt_oracle_and_speed = get_movements_oracle_and_speed()
+    mvt_oracle_and_speed.write_parquet(os.path.join(now_output, "mvt_oracle_and_speed_final.parquet"))
+    mvt_oracle_and_speed.write_parquet(os.path.join(folder_path_exit_parquet, "mvt_oracle_and_speed_final.parquet"))
+
+
+def get_items_without_exit_and_editions(now_output):
+    items_without_exit = get_items_without_exit()
+    items_without_exit.write_parquet(os.path.join(now_output, "items_without_exit_final.parquet"))
+    items_without_exit.write_parquet(os.path.join(folder_path_exit_parquet, "items_without_exit_final.parquet"))
+    items_without_exit.write_excel(os.path.join(".", "excel_files_output", "items_without_exit.xlsx"))
+
+
+def get_state_of_the_stock_and_editions(now_output):
+    stock = get_state_stocks()
+    stock.write_parquet(os.path.join(now_output, "stock_final.parquet"))
+    stock.write_parquet(os.path.join(folder_path_exit_parquet, "stock_final.parquet"))
+    stock.write_excel(os.path.join(".", "excel_files_output", "stock.xlsx"))
+
+
+def get_histo_stock_and_editions(now_output):
+    stock_histo = get_stock_histo()
+    stock_histo.write_parquet(os.path.join(now_output, "stock_histo_compil_final.parquet"))
+    stock_histo.write_parquet(os.path.join(folder_path_exit_parquet, "stock_histo_compil_final.parquet"))
+
+
+def get_stats_breakdown_and_edition(now_output):
+    stats_breakdowns = get_inter_conso_output_statistics()
+    stats_breakdowns.write_parquet(os.path.join(now_output, "stats_breakdown.parquet"))
+    stats_breakdowns.write_parquet(os.path.join(folder_path_exit_parquet, "stats_breakdown.parquet"))
+    stats_breakdowns.write_excel(os.path.join(".", "excel_files_output", "stats_breakdown.xlsx"))
+
+
+def get_items_buildings_and_editions(now_output):
+    items_son, items_parent = get_items_buildings()
+    items_son.write_parquet(os.path.join(now_output, "items_son_buildings.parquet"))
+    items_son.write_parquet(os.path.join(folder_path_exit_parquet, "items_son_buildings.parquet"))
+    items_parent.write_parquet(os.path.join(now_output, "items_parent_buildings.parquet"))
+    items_parent.write_parquet(os.path.join(folder_path_exit_parquet, "items_parent_buildings.parquet"))
+    items_son.write_excel(os.path.join(".", "excel_files_output", "items_son_buildings.xlsx"))
+    items_parent.write_excel(os.path.join(".", "excel_files_output", "items_parent_buildings.xlsx"))
+
+def get_list_photos_and_editions(now_output):
+    list_items_photo, list_photos = get_list_items_photo()
+    list_items_photo = pl.DataFrame({"code_article": list_items_photo})
+    list_photos = pl.DataFrame({"nom_photo": list_photos})
+    list_items_photo.write_parquet(os.path.join(now_output, "list_items_photo.parquet"))
+    list_items_photo.write_parquet(os.path.join(folder_path_exit_parquet, "list_items_photo.parquet"))
+    list_photos.write_parquet(os.path.join(now_output, "list_photos.parquet"))
+    list_photos.write_parquet(os.path.join(folder_path_exit_parquet, "list_photos.parquet"))
+    list_items_photo.write_excel(os.path.join(".", "excel_files_output", "list_items_photo.xlsx"))
+    list_photos.write_excel(os.path.join(".", "excel_files_output", "list_photos.xlsx"))
+
+def get_priority_list_photos_and_editions(now_output):
+    priority_list_photo = get_priority_list_photo()
+    priority_list_photo.write_parquet(os.path.join(now_output, "priority_list_photo.parquet"))
+    priority_list_photo.write_parquet(os.path.join(folder_path_exit_parquet, "priority_list_photo.parquet"))
+    priority_list_photo.write_excel(os.path.join(".", "excel_files_output", "priority_list_photo.xlsx"))
+
+def get_items_m_to_d_and_editions(now_output):
+    items_m_to_d = get_items_m_to_d()
+    items_m_to_d.write_parquet(os.path.join(now_output, "items_m_to_d.parquet"))
+    items_m_to_d.write_parquet(os.path.join(folder_path_exit_parquet, "items_m_to_d.parquet"))
+    items_m_to_d.write_excel(os.path.join(".", "excel_files_output", "items_m_to_d.xlsx"))
+
+def get_items_to_check_and_editions(now_output):
+    items_to_check = get_items_to_check_after_return_from_prod()
+    items_to_check.write_parquet(os.path.join(now_output, "items_to_check_after_return_from_prod.parquet"))
+    items_to_check.write_parquet(os.path.join(folder_path_exit_parquet, "items_to_check_after_return_from_prod.parquet"))
+    items_to_check.write_excel(os.path.join(".", "excel_files_output", "items_to_check_after_return_from_prod.xlsx"))
+
+def get_items_with_good_return_and_editions(now_output):
+    items_with_good_return = get_items_with_return_good()
+    items_with_good_return.write_parquet(os.path.join(now_output, "items_with_good_return.parquet"))
+    items_with_good_return.write_parquet(os.path.join(folder_path_exit_parquet, "items_with_good_return.parquet"))
+    items_with_good_return.write_excel(os.path.join(".", "excel_files_output", "items_with_good_return.xlsx"))
+
+
+def get_origin_items_and_editions(now_output):
+    origin_items = get_origin_items()
+    origin_items.write_parquet(os.path.join(now_output, "origin_items.parquet"))
+    origin_items.write_parquet(os.path.join(folder_path_exit_parquet, "origin_items.parquet"))
+    origin_items.write_excel(os.path.join(".", "excel_files_output", "origin_items.xlsx"))
+
+
 
 
 @get_execution_time
@@ -204,83 +298,91 @@ def main(copy_file=True):
         
         making_parquet_file(last_path_folder, now_output)
    
+    shutil.copyfile(os.path.join(now_output, "items.parquet"), 
+                    os.path.join(folder_path_exit_parquet, "items.parquet"))
+    
+    shutil.copyfile(os.path.join(now_output, "bt.parquet"), 
+                    os.path.join(folder_path_exit_parquet, "bt.parquet"))
+
     # Making stores references
-    stores_references = get_stores_reference()
-    stores_references.write_parquet(os.path.join(now_output, "stores_final.parquet"))
-    stores_references.write_excel(os.path.join(".", "excel_files_output", "stores.xlsx"))
-    shutil.copyfile(os.path.join(".", "excel_files_output", "stores.xlsx"),
-                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "annuaire_magasins.xlsx"))
-
+    get_stores_references_and_edition(now_output)
+    
     # Compilation oracle and speed movements
-    mvt_oracle_and_speed = get_movements_oracle_and_speed()
-    mvt_oracle_and_speed.write_parquet(os.path.join(now_output, "mvt_oracle_and_speed_final.parquet"))
+    get_mvt_oracle_speed_and_editions(now_output)
 
-     # Making items without exit
-    items_without_exit = get_items_without_exit()
-    items_without_exit.write_parquet(os.path.join(now_output, "items_without_exit_final.parquet"))
-    items_without_exit.write_excel(os.path.join(".", "excel_files_output", "items_without_exit.xlsx"))
-    shutil.copyfile(os.path.join(".", "excel_files_output", "items_without_exit.xlsx"),
-                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_sans_sorties.xlsx"))
+    # Making items without exit
+    get_items_without_exit_and_editions(now_output)
     
     # Making the state of the stocks
     now = dt.datetime.today().date().strftime("%Y%m%d")
-    stock = get_state_stocks()
-    stock.write_parquet(os.path.join(now_output, "stock_final.parquet"))
-    stock.write_excel(os.path.join(".", "excel_files_output", "stock.xlsx"))
-    shutil.copyfile(os.path.join(".", "excel_files_output", "stock.xlsx"),
-                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", f"stock_{now}.xlsx"))
-    
+    get_state_of_the_stock_and_editions(now_output)
+
     # Making the stock histo
-    stock_histo = get_stock_histo()
-    stock_histo.write_parquet(os.path.join(now_output, "stock_histo_compil_final.parquet"))
+    get_histo_stock_and_editions(now_output)
 
     # Get stats breakdowns
-    stats_breakdowns = get_inter_conso_output_statistics()
-    stats_breakdowns.write_parquet(os.path.join(now_output, "stats_breakdown.parquet"))
-    stats_breakdowns.write_excel(os.path.join(".", "excel_files_output", "stats_breakdown.xlsx"))
+    get_stats_breakdown_and_edition(now_output)
+
+    # Get items per buildings
+    get_items_buildings_and_editions(now_output)    
+    
+    # Get list photo
+    get_list_photos_and_editions(now_output)
+    
+    # Gest priority list photo
+    get_priority_list_photos_and_editions(now_output)
+    
+    # Get list items from stock m to d
+    get_items_m_to_d_and_editions(now_output)
+    
+    # Get items to check after return from prod
+    get_items_to_check_and_editions(now_output)
+    
+    # Get items with good return
+    get_items_with_good_return_and_editions(now_output)
+
+    get_origin_items_and_editions(now_output)
+    
+
+    shutil.copyfile(os.path.join(".", "excel_files_output", "stores.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "annuaire_magasins.xlsx"))
+
+    shutil.copyfile(os.path.join(".", "excel_files_output", "items_without_exit.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_sans_sorties.xlsx"))
+
+    shutil.copyfile(os.path.join(".", "excel_files_output", "stock.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", f"stock_{now}.xlsx"))
+
     shutil.copyfile(os.path.join(".", "excel_files_output", "stats_breakdown.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "stats_sorties_inter_conso.xlsx"))
 
-
-    # Get items per buildings
-    items_son, items_parent = get_items_buildings()
-    items_son.write_parquet(os.path.join(now_output, "items_son_buildings.parquet"))
-    items_parent.write_parquet(os.path.join(now_output, "items_parent_buildings.parquet"))
-    items_son.write_excel(os.path.join(".", "excel_files_output", "items_son_buildings.xlsx"))
-    items_parent.write_excel(os.path.join(".", "excel_files_output", "items_parent_buildings.xlsx"))
     shutil.copyfile(os.path.join(".", "excel_files_output", "items_son_buildings.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_fils_dans_parc_helios.xlsx"))
     shutil.copyfile(os.path.join(".", "excel_files_output", "items_parent_buildings.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_parents_et_fils_dans_parc_helios.xlsx"))
 
-    # Get list photo
-    list_items_photo, list_photos = get_list_items_photo()
-    list_items_photo = pl.DataFrame({"code_article": list_items_photo})
-    list_photos = pl.DataFrame({"nom_photo": list_photos})
-    list_items_photo.write_parquet(os.path.join(now_output, "list_items_photo.parquet"))
-    list_photos.write_parquet(os.path.join(now_output, "list_photos.parquet"))
-    list_items_photo.write_excel(os.path.join(".", "excel_files_output", "list_items_photo.xlsx"))
-    list_photos.write_excel(os.path.join(".", "excel_files_output", "list_photos.xlsx"))
     shutil.copyfile(os.path.join(".", "excel_files_output", "list_items_photo.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_avec_photos_disponibles.xlsx"))
+
     shutil.copyfile(os.path.join(".", "excel_files_output", "list_photos.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_photos_disponibles.xlsx"))
 
-    # Gest priority list photo
-    priority_list_photo = get_priority_list_photo()
-    priority_list_photo.write_parquet(os.path.join(now_output, "priority_list_photo.parquet"))
-    priority_list_photo.write_excel(os.path.join(".", "excel_files_output", "priority_list_photo.xlsx"))
     shutil.copyfile(os.path.join(".", "excel_files_output", "priority_list_photo.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_des_photos_a_realiser.xlsx"))
-    
-    # Get list items from stock m to d
-    items_m_to_d = get_items_m_to_d()
-    items_m_to_d.write_parquet(os.path.join(now_output, "items_m_to_d.parquet"))
-    items_m_to_d.write_excel(os.path.join(".", "excel_files_output", "items_m_to_d.xlsx"))
+
     shutil.copyfile(os.path.join(".", "excel_files_output", "items_m_to_d.xlsx"),
                     os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "histo_liste_art_de_m_vers_d.xlsx"))
 
+    shutil.copyfile(os.path.join(".", "excel_files_output", "items_to_check_after_return_from_prod.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_en_retour_prod_sans_rep.xlsx"))
+
+    shutil.copyfile(os.path.join(".", "excel_files_output", "items_with_good_return.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_en_retour_good_non_utilise_par_tech.xlsx"))
+    
+    shutil.copyfile(os.path.join(".", "excel_files_output", "origin_items.xlsx"),
+                    os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "liste_articles_et_origine.xlsx"))
+
 
 if __name__ == "__main__":
-    main(False)
+    main()
 

@@ -1,3 +1,5 @@
+import os
+
 STORES_CLOSED = ["1301", "3301", "8803", "4102", "1316"]
 UPSTREAM_STORE_TYPES = ["FOURNISSEURS", "NATIONAL", "RESERVE", "LOCAL", "PIED DE SITE", 
                         "REPARATEUR INTERNE", "REPARATEUR EXTERNE", "DTOM", "DIVERS"]
@@ -80,7 +82,7 @@ file_name_correspondence_store_code_oracle_speed = "TRANSCO MAG AU 20200722.xlsx
 file_name_559 = "559 - BT.csv"
 
 # DPI
-file_name_572 = "572 - (BOOST DPI TPS REEL) - PORTEFEUILLE DPI TRACKING.xlsx"
+file_name_572 = "572 - (BOOST DPI TPS REEL) - PORTEFEUILLE DPI.xlsx"
 sheet_name_572 =  "dde pce + dde liv ou transfert"
 
 # Correspondance user_dpi
@@ -89,3 +91,4 @@ file_name_correspondance_user_dpi = "correspondance_user_cdp_deploiement.xlsx"
 # historique stock
 file_name_500 = "500 - (STK SPD SIP) - ETAT DES STOCKS (POWERBI).csv"
 
+folder_path_exit_parquet = os.path.join(folder_path_exit, "FICHIERS_ANALYSES_SUPPLY_CHAIN", "FICHIERS_PARQUET")
